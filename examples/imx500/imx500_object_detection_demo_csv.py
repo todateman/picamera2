@@ -170,7 +170,7 @@ def get_args():
                         help="Path to the labels file")
     parser.add_argument("--print-intrinsics", action="store_true",
                         help="Print JSON network_intrinsics then exit")
-    parser.add_argument("--csv-file", type=str, default="detections.csv", help="Path to save the CSV file.")
+    parser.add_argument("--csv-file", type=str, default="detections", help="Path to save the CSV file.")
     parser.add_argument("--filter-label", type=str, default="person", help="Label to filter detections for CSV.")
     parser.add_argument("--output-interval", type=int, default=1, help="Interval(sec) for outputting CSV.")
     return parser.parse_args()
@@ -220,13 +220,14 @@ if __name__ == "__main__":
     last_results = None
     picam2.pre_callback = draw_detections
 
-    initialize_csv_file(args.csv_file)
+    csv_file = args.csv_file + "_" + datetime.now().strftime("%Y%m%d%H%M%S") + ".csv"
+    initialize_csv_file(csv_file)
 
     # Execute processing at regular intervals in a thread
     event = threading.Event()
     signal.signal(signal.SIGALRM, int_timer)
     signal.setitimer(signal.ITIMER_REAL, 0.1, args.output_interval)
-    thread = threading.Thread(target=save_to_csv, args=(args.filter_label, args.csv_file, event))
+    thread = threading.Thread(target=save_to_csv, args=(args.filter_label, csv_file, event), daemon=True)
     thread.start()
 
     while True:
